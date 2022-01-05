@@ -1,6 +1,6 @@
 {
   "name": "thread-rpc",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Run RPC over a MessagePort object from a Worker thread (or WebWorker)",
   "main": "index.js",
   "dependencies": {
