@@ -15,7 +15,7 @@ module.exports = class ThreadRPC {
     this._syncInt = null
 
     this._resync = new Map()
-    this._responses = new Map()
+    this._requests = new Map()
     this._responders = new Map()
   }
 
@@ -84,10 +84,10 @@ module.exports = class ThreadRPC {
   }
 
   _onresponse ({ result, error, id }) {
-    const r = this._responses.get(id)
+    const r = this._requests.get(id)
     if (!r) return
 
-    this._responses.delete(id)
+    this._requests.delete(id)
     if (error) r[1](new Error(error))
     else r[0](result)
   }
@@ -131,6 +131,10 @@ module.exports = class ThreadRPC {
     this._responders.set(method, fn)
   }
 
+  unrespond (method) {
+    return this._responders.delete(method)
+  }
+
   requestSync (method, params = null, transferList) {
     if (!this._sync) this._alloc()
 
@@ -166,7 +170,7 @@ module.exports = class ThreadRPC {
   request (method, params = null, transferList) {
     const id = this._id++
     return new Promise((resolve, reject) => {
-      this._responses.set(id, [resolve, reject])
+      this._requests.set(id, [resolve, reject])
       this.port.postMessage({ method, params, id }, transferList)
     })
   }
