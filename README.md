@@ -52,7 +52,7 @@ Options include:
 
 Setup a responder for a method. Options include:
 
-```
+``` js
 {
   transferList, // passed to postMessage's transferList
   sync: bool // true is this is from requestSync - mostly here for debugging
