@@ -1,7 +1,7 @@
 import { parentPort } from 'worker_threads'
 import RPC from '../index.js'
 
-// process.stdout.isTTY = true
+process.stdout.isTTY = true
 
 const rpc = new RPC(parentPort)
 

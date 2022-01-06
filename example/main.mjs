@@ -16,3 +16,7 @@ rpc.respond('hello', async function (data) {
 rpc.respond('hello-massive', async function (data) {
   return Buffer.alloc(9000)
 })
+
+w.on('exit', function () {
+  console.log('(worker exited...)')
+})

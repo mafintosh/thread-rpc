@@ -14,9 +14,13 @@ module.exports = class ThreadRPC {
     this._syncBuf = null
     this._syncInt = null
 
+    this._refable = typeof this.port.ref === 'function'
+    this._refed = true
     this._resync = new Map()
     this._requests = new Map()
     this._responders = new Map()
+
+    this._updateRefs()
   }
 
   _onmessage (e) {
@@ -27,6 +31,18 @@ module.exports = class ThreadRPC {
     if (data.method) this._onrequest(data)
     else if (data.sync) this._onresync(data)
     else this._onresponse(data)
+  }
+
+  _updateRefs () {
+    if (!this._refable) return
+
+    const ref = this._requests.size > 0 || this._responders.size > 0
+
+    if (ref === this._refed) return
+    this._refed = ref
+
+    if (ref) this.port.ref()
+    else this.port.unref()
   }
 
   async _onrequest ({ method, params, id, sync }) {
@@ -88,6 +104,8 @@ module.exports = class ThreadRPC {
     if (!r) return
 
     this._requests.delete(id)
+    this._updateRefs()
+
     if (error) r[1](new Error(error))
     else r[0](result)
   }
@@ -129,10 +147,13 @@ module.exports = class ThreadRPC {
 
   respond (method, fn) {
     this._responders.set(method, fn)
+    this._updateRefs()
   }
 
   unrespond (method) {
-    return this._responders.delete(method)
+    const d = this._responders.delete(method)
+    this._updateRefs()
+    return d
   }
 
   requestSync (method, params = null, transferList) {
@@ -172,6 +193,7 @@ module.exports = class ThreadRPC {
     return new Promise((resolve, reject) => {
       this._requests.set(id, [resolve, reject])
       this.port.postMessage({ method, params, id }, transferList)
+      this._updateRefs()
     })
   }
 }
